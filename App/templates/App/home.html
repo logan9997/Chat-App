@@ -1,0 +1,15 @@
+{% extends 'App/blocks/base.html' %}
+
+{% block content %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'App/styles.css' %}">
+
+<section id="chat">
+
+    <form action="{% url 'home' %}" method="post">
+        <input type="text" name="message" id="message-input">
+    </form>
+
+</section>
+
+{% endblock %}

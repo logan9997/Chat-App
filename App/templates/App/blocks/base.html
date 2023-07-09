@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'App/styles.css' %}">
+</head>
+<body>
+
+    <nav>
+        Nav
+    </nav>
+
+    <section id="block-content-container">
+    {% block content %}
+
+    {% endblock %}
+    </section>
+
+</body>
+</html>

@@ -1,0 +1,17 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#block-content-container {
+    margin: 3rem auto;
+    background-color: whitesmoke;
+    width: 90vw;
+    height: 80vh;
+}
+
+/* HOME */
+#chat {
+    display: flex;
+    justify-content: center;
+}
