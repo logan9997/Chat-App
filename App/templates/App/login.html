@@ -12,16 +12,16 @@
 {% block content %}
 <section class="h-75 d-flex flex-column">
     <form autocomplete="off" action="{% url 'login' %}" method="post" class="
-    mx-auto border-2 border-primary rounded-3  mt-5
-    d-flex border shadow flex-column justify-content-center w-25 h-50
+    mx-auto border-2 border-primary rounded-3 mt-5
+    d-flex border shadow flex-column justify-content-center col-sm-10 col-lg-4 h-75
     ">
         {% csrf_token %}
-        <input placeholder="Choose a name" type="text" name="name" class="text-center mx-auto d-block w-50">
+        <input placeholder="Name" type="text" name="name" class="text-center mx-auto d-block w-50" maxlength="12">
         <button class="btn-success mt-lg-4 mt-sm-2 w-50 mx-auto p-1">Login!</button>
     </form>
 
     {% if name_unfilled %}
-    <div class="alert alert-danger w-25 mx-auto mt-4 border-danger" role="alert">
+    <div class="alert alert-danger col-sm-10 col-lg-4 mx-auto mt-4 border-danger" role="alert">
         Please enter a name
     </div>
     {% endif %}

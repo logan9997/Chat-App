@@ -1,17 +1,22 @@
-body {
-    margin: 0;
-    padding: 0;
+.loading:after {
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: bottom;
+    -webkit-animation: ellipsis steps(4, end) 900ms infinite;
+    animation: ellipsis steps(4, end) 900ms infinite;
+    content: "\2026";
+    /* ascii code for the ellipsis character */
+    width: 0px;
 }
 
-#block-content-container {
-    margin: 3rem auto;
-    background-color: whitesmoke;
-    width: 90vw;
-    height: 80vh;
+@keyframes ellipsis {
+    to {
+        width: 1.25em;
+    }
 }
 
-/* HOME */
-#chat {
-    display: flex;
-    justify-content: center;
+@-webkit-keyframes ellipsis {
+    to {
+        width: 1.25em;
+    }
 }

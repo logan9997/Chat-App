@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from ..forms import Login
+from django.http import HttpRequest
 
-def login(request):
+def login(request:HttpRequest):
     context = {
         'name_unfilled': False
     }
@@ -9,8 +10,8 @@ def login(request):
     if request.method == 'POST':
         form = Login(request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('name')
-            request.session['name'] = username
+            name = form.cleaned_data.get('name')
+            request.session['name'] = name
             return redirect('home')
         else:
             context['name_unfilled'] = True

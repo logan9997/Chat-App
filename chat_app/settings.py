@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-i&znm6g&iukp&e7q#3dmudn*a58(+f6yqqkjyv5=!w(do*y*ne
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.83', '127.0.0.1']
 
 
 # Application definition
@@ -91,9 +91,6 @@ DATABASES = {
     'default': db_credentials
 }
 
-print(DATABASES)
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
@@ -120,9 +117,9 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
-USE_I18N = True
+USE_I18N = False
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -138,3 +135,5 @@ STATICFILES_DIRS = (
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DATETIME_FORMAT="%d%m%Y %H %M"
+DATE_FORMAT="%d%m%Y %H %M"
