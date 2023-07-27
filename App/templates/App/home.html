@@ -38,7 +38,7 @@
 
       <div onsubmit="update_char_count(document.getElementById('message'))" style="height: 15%;" class="bottom-0 position-absolute w-100 d-flex justify-content-center border-top pt-2 border-4 align-self-baseline">
         <form method="post" id="form" class="w-100 mx-1 d-flex align-items-center justify-content-around b-4 flex-row">
-          <textarea name="message" id="message" class="rounded-3" style="width: 85%; resize: none; max-height: 90%;"></textarea>
+          <textarea name="message" id="message" class="rounded-3" style="width: 85%; resize: none; max-height: 90%;" maxlength="500"></textarea>
           <input type="hidden" name="name" value="{{request.session.name}}">
           <div class="d-flex flex-lg-column flex-md-row justify-content-between" style="max-height: 90%;">
             <button type="submit" class="btn-success rounded-3 align-middle d-inline-block overflow-hidden mx-2">Send!</button>
@@ -127,6 +127,7 @@
       }))
     }
 
+    //when window is closed all custom disconnect function
     window.onbeforeunload = function() {
       chatSocket.send(JSON.stringify({
         'type':'disconnect',
