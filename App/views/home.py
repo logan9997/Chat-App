@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from ..models import Message
 from django.http import HttpRequest
+from ..config import MESSAGE_MAX_LENGTH
 
 def home(request:HttpRequest):
 
@@ -10,10 +11,9 @@ def home(request:HttpRequest):
     
     messages = Message.objects.all()
 
-
     context = {
         'name': name,
         'messages': messages,
-        'max_msg_chars': 500
+        'MESSAGE_MAX_LENGTH': MESSAGE_MAX_LENGTH
     }
     return render(request, 'App/home.html', context)
