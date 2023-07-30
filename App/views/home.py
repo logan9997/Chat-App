@@ -11,6 +11,16 @@ def home(request:HttpRequest):
     
     messages = Message.objects.all()
 
+    #group message by date
+    messages_by_date = {}
+    for message in messages:
+        date = str(message.date_sent).split(' ')[0]
+        if date not in messages_by_date:
+            messages_by_date[date] = []
+        messages_by_date[date].append(message)
+
+    messages = messages_by_date
+    
     context = {
         'name': name,
         'messages': messages,
