@@ -11,10 +11,18 @@
 
 {% endblock %}
 
+{% load tags%}
+
 {% block content %}
-<section class="position-relative">
+<section>
   <section id="main" class="col-8 border-2 rounded-3 border position-relative container mt-4 p-0" style="height: 86vh;">
       <div id="messages" style="height:80%" class="position-relative overflow-auto d-flex flex-column pt-1 pb-5">
+        {% for date, messages in messages|items %}
+        <div class="d-flex flex-row justify-content-around my-3">
+            <div style="width: 40%; height: 1px" class="bg-secondary align-self-center"></div>
+            <span class="text-center text-secondary date align-content-center">{{date|date_format:"%d %B %Y"}}</span>
+            <div style="width: 40%; height: 1px" class="bg-secondary align-self-center"></div>
+        </div>
         {% for message in messages %}
         <div class="
           msg-container my-1 d-flex flex-row rounded-3 ps-3 mx-2  
@@ -24,25 +32,30 @@
             <div class="w-100 d-block {% if message.name == request.session.name %} ps-3 {% else %} pe-3 {% endif %}">
               {% if message.name != request.session.name %}<span>{{message.name}}</span> {% endif %}
               <p class="h5 mx-0 mt-2 text-wrap text-break {% if message.name == request.session.name %} text-end me-2 {% endif %}">{{message.message}}</p>
-              <span class="d-sm-block d-none {% if message.name != request.session.name%} float-start {% else %} float-end {% endif %}">{{message.datetime_sent}}</span>
+              <span class="d-sm-block d-none {% if message.name != request.session.name%} float-start {% else %} float-end {% endif %}">{{message.time_sent}}</span>
             </div>
           </div>
         {% endfor %}
+        {% endfor %}
       </div>
 
-      <div class="overflow-auto border-top border-4 px-5 position-relative bottom-0">
-        <table id="typing-users-table" class="w-100" style="table-layout: fixed;">
-          <tr id="typing-users-row"></tr>
+      <div class="border-top border-4 px-5 bg-secondary" style="height: 5%;">
+        <table id="typing-users-table" class="w-100 h-100" style="table-layout: fixed">
+          <tr id="typing-users-row">
+            <td class="typing-user p-0">
+                <p class="loading m-0">Test</p>
+            </td>
+          </tr>
         </table>
       </div>
 
       <div onsubmit="update_char_count(document.getElementById('message'))" style="height: 15%;" class="bottom-0 position-absolute w-100 d-flex justify-content-center border-top pt-2 border-4 align-self-baseline">
         <form method="post" id="form" class="w-100 mx-1 d-flex align-items-center justify-content-around b-4 flex-row">
-          <textarea name="message" id="message" class="rounded-3" style="width: 85%; resize: none; max-height: 90%;" maxlength="500"></textarea>
+          <textarea name="message" id="message" class="rounded-3" style="width: 85%; resize: none; max-height: 90%;" maxlength="{{MESSAGE_MAX_LENGTH}}"></textarea>
           <input type="hidden" name="name" value="{{request.session.name}}">
-          <div class="d-flex flex-lg-column flex-md-row justify-content-between" style="max-height: 90%;">
-            <button type="submit" class="btn-success rounded-3 align-middle d-inline-block overflow-hidden mx-2">Send!</button>
-            <span id="char-count" class="mx-auto mt-2 d-md-block d-none">0 / {{max_msg_chars}}</span>
+          <div class="d-flex flex-lg-column flex-md-row justify-content-between overflow-hidden flex-wrap" style="max-height: 100%;">
+            <button type="submit" class="btn-success rounded-3 align-middle d-inline-block mx-2">Send!</button>
+            <span id="char-count" class="mx-auto mt-2 d-lg-block d-none">0 / {{MESSAGE_MAX_LENGTH}}</span>
           </div>
         </form>
       </div>
@@ -62,24 +75,13 @@
     var name = JSON.parse(document.getElementById('name').textContent)
     var msg_input = document.getElementById('message')
 
-
+    //onload, scroll messages to bottom so most recent message is visible
     window.onload = function() {
       messages.scrollTop = messages.scrollHeight
       msg_input.value = ''
     }
 
     const chatSocket = new WebSocket(url)
-
-    //add typing user
-    msg_input.oninput = function(e) {
-      update_char_count(msg_input)
-      let container = document.getElementById('currently-typing-container')
-      chatSocket.send(JSON.stringify({
-        'type':'user_typing',
-        'name':name,
-        'msg_len':msg_input.value.length
-      }))
-    }
 
     //check which type of operation was called
     chatSocket.onmessage = function(e) {
@@ -103,12 +105,24 @@
       }
     }
 
+
     chatSocket.addEventListener('open', (e) => {
       chatSocket.send(JSON.stringify({
         'type':'connection_test',
         'name':name,
       }))
     })
+
+    //add typing user
+    msg_input.oninput = function(e) {
+      update_char_count(msg_input)
+      let container = document.getElementById('currently-typing-container')
+      chatSocket.send(JSON.stringify({
+        'type':'user_typing',
+        'name':name,
+        'msg_len':msg_input.value.length
+      }))
+    }
 
     //when window is back in focus, re-add typing user
     window.onfocus = function() {
