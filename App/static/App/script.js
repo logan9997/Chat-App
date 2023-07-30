@@ -30,7 +30,7 @@ function create_new_msg(data, messages, name) {
             <div class="w-100 d-block">
                 ${name_span} 
                 <p class="h5 mx-2 text-wrap text-break ${p_align}">${data.message}</p>
-                <span class="${span_float}">${data.datetime_sent}</span>
+                <span class="${span_float} d-sm-block d-none">${data.time_sent}</span>
             </div>
         </div>`)
 
@@ -42,7 +42,6 @@ function update_typing_users(name, msg_len) {
     var users = document.getElementsByClassName('typing-user')
 
     for (let i = 0; i < users.length; i ++) {
-        console.log(name, users[i].getElementsByTagName('p')[0].textContent, name == users[i].getElementsByTagName('p')[0].textContent)
         if (users[i].getElementsByTagName('p')[0].textContent == name) {
             if (msg_len == 0) {
                 users[i].remove()
@@ -66,7 +65,6 @@ function remove_typing_user(name) {
     let users = document.getElementsByClassName('typing-user')
     for (let i = 0; i < users.length; i ++) {
         if (users[i].getElementsByTagName('p')[0].textContent == name) {
-            console.log()
             users[i].remove('<remove_typing_user>', name)
             return
         }
@@ -92,8 +90,8 @@ function create_connection_toast(name, session_name, type) {
         </div>`)
 
         var child_toasts = toasts.getElementsByClassName('toast')
-        var last = child_toasts[child_toasts.length-1]
-        var toast = new bootstrap.Toast(last, {
+        var last_toast = child_toasts[child_toasts.length-1]
+        var toast = new bootstrap.Toast(last_toast, {
             delay:3500
         })
         toast.show()
