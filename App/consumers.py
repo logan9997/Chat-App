@@ -3,10 +3,11 @@ import json
 from datetime import datetime
 from asgiref.sync import async_to_sync
 from .models import Message
-
-DATE_FORMAT = '%B %d, %Y, %I:%M %p'
+from .config import TIME_FORMAT
 
 class ChatComsumer(WebsocketConsumer):
+
+    # async_to_sync
 
     def connect(self):
         self.room_group_name = 'test'
@@ -19,20 +20,19 @@ class ChatComsumer(WebsocketConsumer):
 
     def receive(self, text_data:str):
         text_data_json = json.loads(text_data)
-        print('RECIEVE, json (type) - ', text_data_json['type'])
-        if text_data_json.get('type') == 'message_sent':
-            self.send_message(text_data_json)
-        elif text_data_json.get('type') == 'remove_typing_user':
-            self.remove_typing_user(text_data_json)
-        elif text_data_json.get('type') == 'connection_test':
-            self.custom_connect(text_data_json)
-        elif text_data_json.get('type') == 'disconnect':
-            self.custom_disconnect(text_data_json)
-        else:
-            self.user_typing(text_data_json)
+        types = {
+            'message_sent': self.send_message,
+            'remove_typing_user': self.remove_typing_user,
+            'connection_test': self.custom_connect,
+            'disconnect': self.custom_disconnect,
+            'user_typing':self.user_typing,
+            'add_typing_user':self.user_typing
+        }
+        #call function from types dict, pass text_data as parameter.
+        types[text_data_json.get('type')](text_data_json)
+
 
     def custom_connect(self, text_data_json):
-        print('CUSTOM CONNECT')
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 'type':'connection_test',
@@ -43,7 +43,7 @@ class ChatComsumer(WebsocketConsumer):
     def custom_disconnect(self, text_data_json):
           async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
-                'type':'disconnect_text',
+                'type':'disconnect_test',
                 'name':text_data_json['name']
             }
         )       
@@ -80,6 +80,8 @@ class ChatComsumer(WebsocketConsumer):
             }
         )
         
+    #json dumps
+
     def chat_message(self, event):
         message = event['message']
         name = event['name']
@@ -88,8 +90,8 @@ class ChatComsumer(WebsocketConsumer):
             'type':'chat',
             'message':message,
             'name': name,
-            'datetime_sent':format_datetime_sent(
-                datetime.now().strftime(DATE_FORMAT)
+            'time_sent':format_datetime_sent(
+                datetime.now().strftime(TIME_FORMAT)
             )       
         }))
 
@@ -106,29 +108,27 @@ class ChatComsumer(WebsocketConsumer):
             'name':event['name']
         }))
 
+    
     def connection_test(self, event):
         self.send(text_data=json.dumps({
             'type':'new_connection',
             'name':event['name']
         }))
 
-    def disconnect_text(self, event):
+    def disconnect_test(self, event):
         self.send(text_data=json.dumps({
             'type':'disconnect',
             'name':event['name']
         }))
 
 
-def format_datetime_sent(datetime_sent):
+def format_datetime_sent(time_sent:str):
     #remove 0 padded hour
-    datetime_sent = list(datetime_sent)
-    colon_index = datetime_sent.index(':') 
-    if datetime_sent[colon_index-2] == '0':
-        datetime_sent.pop(colon_index -2)
-    datetime_sent = ''.join(datetime_sent)
+    if time_sent[0] == '0':
+        time_sent = time_sent[1:]
 
-    if 'AM' in datetime_sent:
-        datetime_sent = datetime_sent.replace('AM', 'a.m.')
+    if 'AM' in time_sent:
+        time_sent = time_sent.replace('AM', 'a.m.')
     else:
-        datetime_sent = datetime_sent.replace('PM', 'p.m.')
-    return datetime_sent
+        time_sent = time_sent.replace('PM', 'p.m.')
+    return time_sent
