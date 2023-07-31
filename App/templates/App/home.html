@@ -15,7 +15,7 @@
 
 {% block content %}
 <section class="position-relative">
-  <section id="main" class="col-8 border-2 rounded-3 border position-relative container mt-4 p-0" style="height: 86vh;">
+  <section id="main" class="col-md-9 col-11 border-2 rounded-3 border position-relative container mt-4 p-0" style="height: 82vh;">
       <div id="messages" style="height:80%" class="position-relative overflow-auto d-flex flex-column pt-1 pb-5">
         {% for date, messages in messages|items %}
         <div class="date-seperator d-flex flex-row justify-content-around my-3">
@@ -39,7 +39,7 @@
         {% endfor %}
       </div>
 
-      <div class="border-top border-4 px-5 bg-secondary" style="height: 5%;">
+      <div class="border-top border-4 px-5 bg-secondary position-absolute" style="bottom: 15%;">
         <table id="typing-users-table" class="w-100 h-100" style="table-layout: fixed">
           <tr id="typing-users-row">
             <td class="typing-user p-0">
