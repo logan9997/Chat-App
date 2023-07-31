@@ -1,22 +1,40 @@
-from channels.generic.websocket import WebsocketConsumer
 import json
 from datetime import datetime
+
 from asgiref.sync import async_to_sync
+from channels.generic.websocket import WebsocketConsumer
+
+from .config import DATE_SEPERATOR_FORMAT, TIME_FORMAT
 from .models import Message
-from .config import TIME_FORMAT, DATE_SEPERATOR_FORMAT
+
+active_connections = []
 
 class ChatComsumer(WebsocketConsumer):
 
     # async_to_sync
 
     def connect(self):
-        self.room_group_name = 'test'
-
+        self.room_group_name = 'main'
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name,
             self.channel_name
         )
         self.accept()
+
+        name = self.scope['session']['name']
+        if name not in active_connections:
+            active_connections.append(name)
+        
+        
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)(
+            self.room_group_name,
+            self.channel_name
+        )
+        
+        name = self.scope['session']['name']
+        if name in active_connections:
+            active_connections.remove(name)   
 
     def receive(self, text_data:str):
         text_data_json = json.loads(text_data)
@@ -72,6 +90,15 @@ class ChatComsumer(WebsocketConsumer):
         )
 
     def user_typing(self, text_data_json):
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                'type':'add_typing_user',
+                'name':text_data_json['name'],
+                'msg_len':text_data_json['msg_len']
+            }
+        )
+
+    def add_all_typing_users(self, text_data_json):
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 'type':'add_typing_user',
