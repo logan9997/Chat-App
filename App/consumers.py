@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from asgiref.sync import async_to_sync
 from .models import Message
-from .config import TIME_FORMAT
+from .config import TIME_FORMAT, DATE_SEPERATOR_FORMAT
 
 class ChatComsumer(WebsocketConsumer):
 
@@ -83,16 +83,14 @@ class ChatComsumer(WebsocketConsumer):
     #json dumps
 
     def chat_message(self, event):
-        message = event['message']
-        name = event['name']
-
         self.send(text_data=json.dumps({
             'type':'chat',
-            'message':message,
-            'name': name,
+            'message':event['message'],
+            'name': event['name'],
             'time_sent':format_datetime_sent(
                 datetime.now().strftime(TIME_FORMAT)
-            )       
+            ),
+            'date_sent':datetime.now().strftime(DATE_SEPERATOR_FORMAT)
         }))
 
     def add_typing_user(self, event):

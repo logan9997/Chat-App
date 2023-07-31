@@ -16,6 +16,7 @@ function create_new_msg(data, messages, name) {
         var name_span = ''
         var p_align = 'text-end'
         var span_float = 'float-end'
+        var p_direction = 'ps-3'
     } else {
         var bg = 'bg-success'
         var justify = 'justify-content-start'
@@ -23,11 +24,31 @@ function create_new_msg(data, messages, name) {
         var name_span = `<span>${data.name}</span>`  
         var p_align = 'text-start'
         var span_float = 'float-start'
+        var p_direction = 'pe-3'
+    }
+
+    let dates = document.getElementsByClassName('date-seperator-text')
+    let unique_dates = []
+    for (let i = 0; i < dates.length; i ++) {
+        let date = dates[i].innerHTML
+        if (! unique_dates.includes(date)) {
+            unique_dates.push(date)
+        }
+    }
+
+    if (! unique_dates.includes(data.date_sent)) {
+        messages.insertAdjacentHTML('beforeend', 
+        `<div class="date-seperator d-flex flex-row justify-content-around my-3">
+            <div style="width: 40%; height: 1px" class="bg-secondary align-self-center"></div>
+            <span class="date-seperator-text text-center text-secondary date align-content-center">${data.date_sent}</span>
+            <div style="width: 40%; height: 1px" class="bg-secondary align-self-center"></div>
+        </div>`
+        )
     }
 
     messages.insertAdjacentHTML('beforeend',
-        `<div class="msg-container msg-container my-1 d-flex flex-row rounded-3 ps-3 mx-2 ${bg} ${justify} ${align}" style="max-width: 75%;">
-            <div class="w-100 d-block">
+        `<div class="msg-container my-1 d-flex flex-row rounded-3 ps-3 mx-2 ${bg} ${justify} ${align}" style="max-width: 75%;">
+            <div class="w-100 d-block ${p_direction}">
                 ${name_span} 
                 <p class="h5 mx-2 text-wrap text-break ${p_align}">${data.message}</p>
                 <span class="${span_float} d-sm-block d-none">${data.time_sent}</span>

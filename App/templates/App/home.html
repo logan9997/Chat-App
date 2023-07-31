@@ -14,13 +14,13 @@
 {% load tags%}
 
 {% block content %}
-<section>
+<section class="position-relative">
   <section id="main" class="col-8 border-2 rounded-3 border position-relative container mt-4 p-0" style="height: 86vh;">
       <div id="messages" style="height:80%" class="position-relative overflow-auto d-flex flex-column pt-1 pb-5">
         {% for date, messages in messages|items %}
-        <div class="d-flex flex-row justify-content-around my-3">
+        <div class="date-seperator d-flex flex-row justify-content-around my-3">
             <div style="width: 40%; height: 1px" class="bg-secondary align-self-center"></div>
-            <span class="text-center text-secondary date align-content-center">{{date|date_format:"%d %B %Y"}}</span>
+            <span class="date-seperator-text text-center text-secondary date align-content-center">{{date|date_format:"%d %B %Y"}}</span>
             <div style="width: 40%; height: 1px" class="bg-secondary align-self-center"></div>
         </div>
         {% for message in messages %}
@@ -28,13 +28,13 @@
           msg-container my-1 d-flex flex-row rounded-3 ps-3 mx-2  
           {% if message.name == request.session.name %} justify-content-end bg-primary align-self-end
           {% else %} justify-content-start bg-success align-self-start {% endif %} 
-        " style="max-width: 75%; ">
+        "style="max-width: 75%; ">
             <div class="w-100 d-block {% if message.name == request.session.name %} ps-3 {% else %} pe-3 {% endif %}">
               {% if message.name != request.session.name %}<span>{{message.name}}</span> {% endif %}
-              <p class="h5 mx-0 mt-2 text-wrap text-break {% if message.name == request.session.name %} text-end me-2 {% endif %}">{{message.message}}</p>
+              <p class="h5 mx-0 text-wrap text-break {% if message.name == request.session.name %} text-end me-2 {% endif %}">{{message.message}}</p>
               <span class="d-sm-block d-none {% if message.name != request.session.name%} float-start {% else %} float-end {% endif %}">{{message.time_sent}}</span>
             </div>
-          </div>
+        </div>
         {% endfor %}
         {% endfor %}
       </div>
