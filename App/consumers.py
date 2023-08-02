@@ -6,12 +6,14 @@ from channels.generic.websocket import WebsocketConsumer
 
 from .config import DATE_SEPERATOR_FORMAT, TIME_FORMAT
 from .models import Message
+from .utils import format_datetime_sent
 
-active_connections = []
+
 
 class ChatComsumer(WebsocketConsumer):
 
-    # async_to_sync
+    active_connections = []
+    typing_users = []
 
     def connect(self):
         self.room_group_name = 'main'
@@ -21,45 +23,90 @@ class ChatComsumer(WebsocketConsumer):
         )
         self.accept()
 
-        name = self.scope['session']['name']
-        if name not in active_connections:
-            active_connections.append(name)
-        
-        
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name,
             self.channel_name
         )
         
-        name = self.scope['session']['name']
-        if name in active_connections:
-            active_connections.remove(name)   
+        if self in self.active_connections:
+            self.active_connections.remove(self)
+
+
 
     def receive(self, text_data:str):
         text_data_json = json.loads(text_data)
+        print('tdj', text_data_json)
         types = {
             'message_sent': self.send_message,
             'remove_typing_user': self.remove_typing_user,
             'connection_test': self.custom_connect,
             'disconnect': self.custom_disconnect,
             'user_typing':self.user_typing,
-            'add_typing_user':self.user_typing
+            'add_typing_user':self.user_typing,
+            'add_all':self.add_all_typing,
+            'append_typing_user':self.append_typing_user
         }
         #call function from types dict, pass text_data as parameter.
         types[text_data_json.get('type')](text_data_json)
 
 
-    def custom_connect(self, text_data_json):
+    def add_all_typing(self, text_data_json):
+        print('add_all_typing')
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                'type':'add_all',
+            }
+        )  
+
+    def add_all(self, event):
+        print('ADD_ALL')
+        self.send(text_data=json.dumps({
+            'type':'add_all'
+        }))
+
+
+    def async_all_typing(self, text_data_json):
+        print('async_all_typing')
+
+
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 'type':'connection_test',
-                'name':text_data_json['name']
+                'users':self.typing_users
+            }
+        )   
+
+    def append_typing_user(self, event):
+        name = event.get('name')
+        message_input = event.get('message_input')
+
+        typing_users_name = [user['name'] for user in self.typing_users]
+        if name not in typing_users_name and message_input != '':
+            self.typing_users.append({'name':name, 'message_input':message_input, 'self':self})
+
+        print('TYPING USERS', self.typing_users)
+
+        self.send(text_data=json.dumps({
+            'type':'display_all_typing_users',
+            'users':[dict(user, **{'self':''}) for user in self.typing_users],
+        }))
+
+    def custom_connect(self, text_data_json):
+        if self not in self.active_connections:
+            self.active_connections.append(self)
+
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                'type':'connection_test',
+                'name':text_data_json['name'],
             }
         )
 
     def custom_disconnect(self, text_data_json):
-          async_to_sync(self.channel_layer.group_send)(
+        self.typing_users = [user for user in self.typing_users if user['self'] != self]
+        print('DISCONNECT', self.typing_users)
+        async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
                 'type':'disconnect_test',
                 'name':text_data_json['name']
@@ -97,17 +144,6 @@ class ChatComsumer(WebsocketConsumer):
                 'msg_len':text_data_json['msg_len']
             }
         )
-
-    def add_all_typing_users(self, text_data_json):
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name, {
-                'type':'add_typing_user',
-                'name':text_data_json['name'],
-                'msg_len':text_data_json['msg_len']
-            }
-        )
-        
-    #json dumps
 
     def chat_message(self, event):
         self.send(text_data=json.dumps({
@@ -147,13 +183,3 @@ class ChatComsumer(WebsocketConsumer):
         }))
 
 
-def format_datetime_sent(time_sent:str):
-    #remove 0 padded hour
-    if time_sent[0] == '0':
-        time_sent = time_sent[1:]
-
-    if 'AM' in time_sent:
-        time_sent = time_sent.replace('AM', 'a.m.')
-    else:
-        time_sent = time_sent.replace('PM', 'p.m.')
-    return time_sent

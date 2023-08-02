@@ -13,7 +13,7 @@ def login(request:HttpRequest):
             name = form.cleaned_data.get('name')
             request.session['name'] = name
             return redirect('home')
-        else:
-            context['name_unfilled'] = True
+        
+        context['name_unfilled'] = True
 
     return render(request, 'App/login.html', context=context)

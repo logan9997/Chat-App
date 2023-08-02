@@ -25,7 +25,7 @@
         </div>
         {% for message in messages %}
         <div class="
-          msg-container my-1 d-flex flex-row rounded-3 ps-3 mx-2  
+          msg-container my-1 d-flex flex-row rounded-3 ps-3 mx-2 
           {% if message.name == request.session.name %} justify-content-end bg-primary align-self-end
           {% else %} justify-content-start bg-success align-self-start {% endif %} 
         "style="max-width: 75%; ">
@@ -39,13 +39,9 @@
         {% endfor %}
       </div>
 
-      <div class="border-top border-4 px-5 bg-secondary position-absolute" style="bottom: 15%;">
+      <div class="border-top border-4 px-5 position-absolute" style="bottom: 15%;">
         <table id="typing-users-table" class="w-100 h-100" style="table-layout: fixed">
-          <tr id="typing-users-row">
-            <td class="typing-user p-0">
-                <p class="loading m-0">Test</p>
-            </td>
-          </tr>
+          <tr id="typing-users-row"></tr>
         </table>
       </div>
 
@@ -75,12 +71,6 @@
     var name = JSON.parse(document.getElementById('name').textContent)
     var msg_input = document.getElementById('message')
 
-    //onload, scroll messages to bottom so most recent message is visible
-    window.onload = function() {
-      messages.scrollTop = messages.scrollHeight
-      msg_input.value = ''
-    }
-
     const chatSocket = new WebSocket(url)
 
     //check which type of operation was called
@@ -102,63 +92,88 @@
       }
       else if (data.type == 'disconnect') {
         create_connection_toast(data.name, name, 'disconnect')
+        remove_typing_user(data.name)
+      }
+      else if (data.type == 'display_all_typing_users') {
+        console.log('TYPING USERS ', data.users)
+        for (let i = 0; i < data.users.length; i ++) {
+          console.log('SUCCESS - adding typing user', data.users[i].name)
+          if (data.users[i].message_input != '') {
+            update_typing_users(data.users[i].name, 1)
+          }
+        }
+      }
+      else if (data.type == 'add_all') {
+          console.log('ATTEMPTING SEND...')
+          chatSocket.send(JSON.stringify({
+            'type':'append_typing_user',
+            'name':name,
+            'message_input':msg_input.value
+          }))
       }
     }
 
-
+    //on a new socket connection, call connection test
     chatSocket.addEventListener('open', (e) => {
+      // chatSocket.send(JSON.stringify({
+      //   'type':'connection_test',
+      //   'name':name,
+      // }))
       chatSocket.send(JSON.stringify({
-        'type':'connection_test',
-        'name':name,
+        'type':'add_all',
       }))
     })
 
+    //onload, scroll messages to bottom so most recent message is visible
+    window.addEventListener('load', () => {
+      messages.scrollTop = messages.scrollHeight
+      msg_input.value = ''
+    })
+
     //add typing user
-    msg_input.oninput = function(e) {
+    msg_input.addEventListener('input', () => {
       update_char_count(msg_input)
-      let container = document.getElementById('currently-typing-container')
       chatSocket.send(JSON.stringify({
         'type':'user_typing',
         'name':name,
         'msg_len':msg_input.value.length
       }))
-    }
+    })
+    
 
     //when window is back in focus, re-add typing user
-    window.onfocus = function() {
+    window.addEventListener('focus', () => {
       chatSocket.send(JSON.stringify({
         'type':'add_typing_user',
         'name':name,
         'msg_len':msg_input.value.length
       }))
-    }
+    })
 
     //when window is not focused, remove typing user
-    window.onblur = function() {
-      chatSocket.send(JSON.stringify({
-        'type':'remove_typing_user',
-        'name':name
-      }))
-    }
+    // window.addEventListener('blur', () => {
+    //   chatSocket.send(JSON.stringify({
+    //     'type':'remove_typing_user',
+    //     'name':name
+    //   }))
+    // })
 
     //when window is closed all custom disconnect function
-    window.onbeforeunload = function() {
+    window.addEventListener('beforeunload', () => {
       chatSocket.send(JSON.stringify({
         'type':'disconnect',
         'name':name
       }))
-    }
+    })
 
     //when form is submitted, add message info to consumers
     let form = document.getElementById('form')
     form.addEventListener('submit', (e)=> {
       e.preventDefault()
-      let message = e.target.message.value
-      let name = e.target.name.value
       chatSocket.send(JSON.stringify({
         'type':'message_sent',
-        'message':message,
-        'name':name,
+        'message':e.target.message.value,
+        'name':e.target.name.value,
       }))
       form.reset()
     })

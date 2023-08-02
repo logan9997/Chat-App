@@ -74,7 +74,7 @@ function update_typing_users(name, msg_len) {
     if (msg_len != 0) {
         typing_users.insertAdjacentHTML('beforeend',
         `
-        <td class="typing-user">
+        <td class="typing-user p-0">
             <p class="loading m-0">${name}</p>
         </td>
         `
@@ -117,4 +117,12 @@ function create_connection_toast(name, session_name, type) {
         })
         toast.show()
     }
+}
+
+function is_user_typing() {
+    let msg_input = document.getElementById('message')
+    if (msg_input.value.length > 0) {
+        return true
+    }
+    return false
 }
