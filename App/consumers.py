@@ -48,6 +48,13 @@ class Handlers(WebsocketConsumer):
             'name':name
         }))
 
+    def create_toast_handler(self, event:dict):
+        self.send(text_data=json.dumps({
+            'type':'create_toast',
+            'name':event.get('name'),
+            'connection_type': event.get('connection_type')
+        }))
+
 
 class ChatComsumer(Handlers):
 
@@ -74,7 +81,8 @@ class ChatComsumer(Handlers):
             'add_typing_user': self.add_typing_user,
             'remove_typing_user': self.remove_typing_user,
             'add_all_typing_users': self.add_all_typing_users,
-            'remove_typing_user_on_refresh': self.remove_typing_user_on_refresh
+            'remove_typing_user_on_refresh': self.remove_typing_user_on_refresh,
+            'create_toast':self.create_toast
         }
         types[text_data_json.get('type')](text_data_json)
 
@@ -127,7 +135,6 @@ class ChatComsumer(Handlers):
         name = data.get('name')
         if name in self.typing_users:
             self.typing_users.remove(name)
-        print('ON REF', self.typing_users)
 
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name, {
@@ -135,3 +142,12 @@ class ChatComsumer(Handlers):
                 'name':name
             }
         )
+
+    def create_toast(self, data:dict):
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name, {
+                'type': 'create_toast_handler',
+                'name':data.get('name'),
+                'connection_type':data.get('connection_type')
+            }
+        )    

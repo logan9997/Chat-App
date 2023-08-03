@@ -89,6 +89,9 @@
       else if (data.type === 'add_all_typing_users') {
         add_all_typing_users(data.typing_users)
       }
+      else if (data.type === 'create_toast') {
+        create_toast(data.name, name, data.connection_type)
+      }
     }
 
     //onload, scroll messages to bottom so most recent message is visible
@@ -106,7 +109,14 @@
         'type':'add_all_typing_users',
         'name':name
       }))    
+      chatSocket.send(JSON.stringify({
+        'type':'create_toast',
+        'name':name,
+        'connection_type':'connect'
+      }))    
     })
+
+    
 
     function remove_typing_users_on_refresh() {
       console.log('UNLOADING')
@@ -118,10 +128,20 @@
 
     window.addEventListener('unload', (e) => {
       remove_typing_users_on_refresh()
+      chatSocket.send(JSON.stringify({
+        'type':'create_toast',
+        'name':name,
+        'connection_type':'disconnect'
+      }))  
     })
 
     window.addEventListener('beforeunload', (e) => {
       remove_typing_users_on_refresh()
+      chatSocket.send(JSON.stringify({
+        'type':'create_toast',
+        'name':name,
+        'connection_type':'disconnect'
+      }))  
     })
 
     msg_input.addEventListener('input', () => {

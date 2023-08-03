@@ -93,7 +93,7 @@ function remove_typing_user(name) {
     }
 }
 
-function create_connection_toast(name, session_name, type) {
+function create_toast(name, session_name, type) {
     if (name != session_name) {
         let toasts = document.getElementById('new-connection-toasts')
 
