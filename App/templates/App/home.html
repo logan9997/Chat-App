@@ -8,7 +8,7 @@
     integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
     crossorigin="anonymous"
 />
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 {% endblock %}
 
 {% load tags%}
@@ -39,7 +39,7 @@
         {% endfor %}
       </div>
 
-      <div class="border-top border-4 px-5 position-absolute" style="bottom: 15%;">
+      <div class="border-top border-4 px-5 position-absolute bg-white" style="bottom: 15%;">
         <table id="typing-users-table" class="w-100 h-100" style="table-layout: fixed">
           <tr id="typing-users-row"></tr>
         </table>
@@ -67,7 +67,6 @@
 
   <script type="text/javascript">
     let url = `ws://${window.location.host}/ws/socket-server/`
-    var messages = document.getElementById('messages')
     var name = JSON.parse(document.getElementById('name').textContent)
     var msg_input = document.getElementById('message')
 
@@ -76,94 +75,84 @@
     //check which type of operation was called
     chatSocket.onmessage = function(e) {
       var data = JSON.parse(e.data)
-      console.log('DATA TYPE - ', data.type)
-      if (data.type == 'remove_typing_user') {
-        remove_typing_user(data.name)
-      }
-      else if (data.type == 'chat') {
-        create_new_msg(data, messages, name)
+      console.log('DATA', data)
+      if (data.type === 'send_message') {
+        create_new_msg(data, name)
         remove_typing_user(data.name)
       } 
-      else if (data.type == 'add_typing_user') {
+      else if (data.type === 'add_typing_user') {
         update_typing_users(data.name, data.msg_len)
-      }
-      else if (data.type == 'new_connection') {
-        create_connection_toast(data.name, name, 'connect')
-      }
-      else if (data.type == 'disconnect') {
-        create_connection_toast(data.name, name, 'disconnect')
+      } 
+      else if (data.type === 'remove_typing_user') {
         remove_typing_user(data.name)
       }
-      else if (data.type == 'display_all_typing_users') {
-        console.log('TYPING USERS ', data.users)
-        for (let i = 0; i < data.users.length; i ++) {
-          console.log('SUCCESS - adding typing user', data.users[i].name)
-          if (data.users[i].message_input != '') {
-            update_typing_users(data.users[i].name, 1)
-          }
-        }
-      }
-      else if (data.type == 'add_all') {
-          console.log('ATTEMPTING SEND...')
-          chatSocket.send(JSON.stringify({
-            'type':'append_typing_user',
-            'name':name,
-            'message_input':msg_input.value
-          }))
+      else if (data.type === 'add_all_typing_users') {
+        add_all_typing_users(data.typing_users)
       }
     }
-
-    //on a new socket connection, call connection test
-    chatSocket.addEventListener('open', (e) => {
-      // chatSocket.send(JSON.stringify({
-      //   'type':'connection_test',
-      //   'name':name,
-      // }))
-      chatSocket.send(JSON.stringify({
-        'type':'add_all',
-      }))
-    })
 
     //onload, scroll messages to bottom so most recent message is visible
     window.addEventListener('load', () => {
       messages.scrollTop = messages.scrollHeight
       msg_input.value = ''
+      chatSocket.send(JSON.stringify({
+        'type':'remove_typing_user',
+        'name':name,
+      }))     
     })
 
-    //add typing user
+    chatSocket.addEventListener('open', () => {
+      chatSocket.send(JSON.stringify({
+        'type':'add_all_typing_users',
+        'name':name
+      }))    
+    })
+
+    function remove_typing_users_on_refresh() {
+      console.log('UNLOADING')
+      chatSocket.send(JSON.stringify({
+        'type':'remove_typing_user_on_refresh',
+        'name':name,
+      })) 
+    }
+
+    window.addEventListener('unload', (e) => {
+      remove_typing_users_on_refresh()
+    })
+
+    window.addEventListener('beforeunload', (e) => {
+      remove_typing_users_on_refresh()
+    })
+
     msg_input.addEventListener('input', () => {
       update_char_count(msg_input)
-      chatSocket.send(JSON.stringify({
-        'type':'user_typing',
-        'name':name,
-        'msg_len':msg_input.value.length
-      }))
+      if (msg_input.value.length > 0) {
+        chatSocket.send(JSON.stringify({
+          'type':'add_typing_user',
+          'name':name,
+        }))
+      } else {
+        chatSocket.send(JSON.stringify({
+          'type':'remove_typing_user',
+          'name':name,
+        }))      
+      }
     })
-    
 
-    //when window is back in focus, re-add typing user
+    window.addEventListener('blur', () => {
+      chatSocket.send(JSON.stringify({
+        'type':'remove_typing_user',
+        'name':name,
+      })) 
+    })
+
     window.addEventListener('focus', () => {
-      chatSocket.send(JSON.stringify({
-        'type':'add_typing_user',
-        'name':name,
-        'msg_len':msg_input.value.length
-      }))
-    })
-
-    //when window is not focused, remove typing user
-    // window.addEventListener('blur', () => {
-    //   chatSocket.send(JSON.stringify({
-    //     'type':'remove_typing_user',
-    //     'name':name
-    //   }))
-    // })
-
-    //when window is closed all custom disconnect function
-    window.addEventListener('beforeunload', () => {
-      chatSocket.send(JSON.stringify({
-        'type':'disconnect',
-        'name':name
-      }))
+      if (msg_input.value.length > 0) {
+        chatSocket.send(JSON.stringify({
+          'type':'add_typing_user',
+          'name':name,
+        })) 
+      }
     })
 
     //when form is submitted, add message info to consumers
@@ -171,9 +160,9 @@
     form.addEventListener('submit', (e)=> {
       e.preventDefault()
       chatSocket.send(JSON.stringify({
-        'type':'message_sent',
-        'message':e.target.message.value,
+        'type':'send_message',
         'name':e.target.name.value,
+        'message':e.target.message.value,
       }))
       form.reset()
     })

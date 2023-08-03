@@ -8,7 +8,7 @@ function update_char_count(textarea) {
 }
 
 
-function create_new_msg(data, messages, name) {
+function create_new_msg(data, name) {
     if (name == data.name) {
         var bg = 'bg-primary'
         var justify = 'justify-content-end'
@@ -36,6 +36,7 @@ function create_new_msg(data, messages, name) {
         }
     }
 
+    let messages = document.getElementById('messages')
     if (! unique_dates.includes(data.date_sent)) {
         messages.insertAdjacentHTML('beforeend', 
         `<div class="date-seperator d-flex flex-row justify-content-around my-3">
@@ -125,4 +126,28 @@ function is_user_typing() {
         return true
     }
     return false
+}
+
+function add_all_typing_users(typing_users_data) {
+    var typing_users = document.getElementById('typing-users-row')
+
+    var usernames_tags = document.getElementsByClassName('loading')
+    var typing_users_names = []
+
+    for (let i = 0; i < usernames_tags.length; i ++) {
+        let name = usernames_tags[i].innerHTML
+        typing_users_names.push(name)
+    }
+
+    for (let i = 0; i < typing_users_data.length; i ++) {
+        if (! typing_users_names.includes(typing_users_data[i])) {
+            typing_users.insertAdjacentHTML('beforeend',
+            `
+            <td class="typing-user p-0">
+                <p class="loading m-0">${typing_users_data[i]}</p>
+            </td>
+            `
+            )
+        }
+    }
 }
