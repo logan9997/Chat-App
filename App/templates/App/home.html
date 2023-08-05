@@ -75,7 +75,6 @@
     //check which type of operation was called
     chatSocket.onmessage = function(e) {
       var data = JSON.parse(e.data)
-      // console.log('DATA', data)
       if (data.type === 'send_message') {
         create_new_msg(data, name)
         remove_typing_user(data.name)
@@ -129,9 +128,7 @@
     var unload = sessionStorage.getItem('unload')
     var beforeunload = sessionStorage.getItem('beforeunload')
 
-    console.log(chatSocket.readyState, chatSocket.OPEN)
-    if ((unload || beforeunload) && chatSocket.readyState === chatSocket.OPEN) {
-      console.log('REMOVE TYPING USER - window.unload')
+    if (unload || beforeunload) {
       chatSocket.send(JSON.stringify({
         'type':'remove_typing_user_on_refresh',
         'name':name,
@@ -155,14 +152,12 @@
 
     msg_input.addEventListener('input', () => {
       update_char_count(msg_input)
-      console.log('MSG INPTU', msg_input.value)
       if (msg_input.value.length > 0) {
         chatSocket.send(JSON.stringify({
           'type':'add_typing_user',
           'name':name,
         }))
       } else {
-        console.log('REMOVE TYPING USER - msg_input.input')
         chatSocket.send(JSON.stringify({
           'type':'remove_typing_user',
           'name':name,
