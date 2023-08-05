@@ -170,22 +170,6 @@
       }
     })
 
-    window.addEventListener('blur', () => {
-      chatSocket.send(JSON.stringify({
-        'type':'remove_typing_user',
-        'name':name,
-      })) 
-    })
-
-    window.addEventListener('focus', () => {
-      if (msg_input.value.length > 0) {
-        chatSocket.send(JSON.stringify({
-          'type':'add_typing_user',
-          'name':name,
-        })) 
-      }
-    })
-
     let logout_button = document.getElementById('logout-button')
     logout_button.addEventListener('click', () => {
       chatSocket.send(JSON.stringify({
