@@ -35,7 +35,6 @@ class Handlers(WebsocketConsumer):
 
     def add_all_typing_users_handler(self, event:dict):
         typing_users = list(set(self.typing_users))
-        print(typing_users)
         self.send(text_data=json.dumps({
             'type':'add_all_typing_users',
             'typing_users':typing_users
@@ -115,7 +114,6 @@ class ChatComsumer(Handlers):
     def remove_typing_user(self, data:dict):
         name = data.get('name')
         if name in self.typing_users:
-            print(f'REMOVING {name} from typing users')
             self.typing_users.remove(name)
 
         async_to_sync(self.channel_layer.group_send)(
@@ -136,7 +134,6 @@ class ChatComsumer(Handlers):
     def remove_typing_user_on_refresh(self, data:dict):
         name = data.get('name')
         if name in self.typing_users:
-            print(f'REMOVING {name} from typing users')
             self.typing_users.remove(name)
 
         async_to_sync(self.channel_layer.group_send)(
