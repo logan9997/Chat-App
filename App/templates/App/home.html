@@ -57,7 +57,7 @@
       </div>
   </section>
 
-  <div id="new-connection-toasts" class="position-absolute top-0 ms-4 h-100 overflow-hidden"></div>
+  <div id="new-connection-toasts" class="position-absolute top-0 ms-4 overflow-hidden" style="max-height: 60vh"></div>
 </section>
 {% endblock %}
 
@@ -75,7 +75,7 @@
     //check which type of operation was called
     chatSocket.onmessage = function(e) {
       var data = JSON.parse(e.data)
-      console.log('DATA', data)
+      // console.log('DATA', data)
       if (data.type === 'send_message') {
         create_new_msg(data, name)
         remove_typing_user(data.name)
@@ -94,16 +94,6 @@
       }
     }
 
-    //onload, scroll messages to bottom so most recent message is visible
-    window.addEventListener('load', () => {
-      messages.scrollTop = messages.scrollHeight
-      msg_input.value = ''
-      chatSocket.send(JSON.stringify({
-        'type':'remove_typing_user',
-        'name':name,
-      }))     
-    })
-
     chatSocket.addEventListener('open', () => {
       chatSocket.send(JSON.stringify({
         'type':'add_all_typing_users',
@@ -114,29 +104,48 @@
         'name':name,
         'connection_type':'connect'
       }))    
+      chatSocket.send(JSON.stringify({
+        'type':'remove_typing_user',
+        'name':name,
+      })) 
     })
 
-    
+    //onload, scroll messages to bottom so most recent message is visible
+    window.addEventListener('load', () => {
+      messages.scrollTop = messages.scrollHeight
+      msg_input.value = ''
+    })
 
-    function remove_typing_users_on_refresh() {
-      console.log('UNLOADING')
+    //some browsers will fire both or one of beforeunload and unload, so check 
+    //if one of these events is fired, so chat socket is only sent to once
+    window.addEventListener('beforeunload', (e) => {
+      sessionStorage.setItem('beforeunload', true)
+    })
+
+    window.addEventListener('unload', (e) => {
+      sessionStorage.setItem('unload', true)
+    })
+
+    var unload = sessionStorage.getItem('unload')
+    var beforeunload = sessionStorage.getItem('beforeunload')
+
+    console.log(chatSocket.readyState, chatSocket.OPEN)
+    if ((unload || beforeunload) && chatSocket.readyState === chatSocket.OPEN) {
+      console.log('REMOVE TYPING USER - window.unload')
       chatSocket.send(JSON.stringify({
         'type':'remove_typing_user_on_refresh',
         'name':name,
       })) 
-    }
-
-    window.addEventListener('unload', (e) => {
-      remove_typing_users_on_refresh()
       chatSocket.send(JSON.stringify({
         'type':'create_toast',
         'name':name,
         'connection_type':'disconnect'
       }))  
-    })
+      sessionStorage.setItem('beforeunload', false)
+      sessionStorage.setItem('unload', false)
+    }
 
-    window.addEventListener('beforeunload', (e) => {
-      remove_typing_users_on_refresh()
+    window.addEventListener('close', () => {
       chatSocket.send(JSON.stringify({
         'type':'create_toast',
         'name':name,
@@ -146,12 +155,14 @@
 
     msg_input.addEventListener('input', () => {
       update_char_count(msg_input)
+      console.log('MSG INPTU', msg_input.value)
       if (msg_input.value.length > 0) {
         chatSocket.send(JSON.stringify({
           'type':'add_typing_user',
           'name':name,
         }))
       } else {
+        console.log('REMOVE TYPING USER - msg_input.input')
         chatSocket.send(JSON.stringify({
           'type':'remove_typing_user',
           'name':name,
@@ -184,6 +195,10 @@
         'name':e.target.name.value,
         'message':e.target.message.value,
       }))
+      chatSocket.send(JSON.stringify({
+        'type':'remove_typing_user',
+        'name':name,
+      }))  
       form.reset()
     })
 
