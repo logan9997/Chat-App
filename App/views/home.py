@@ -19,7 +19,7 @@ def home(request:HttpRequest):
             messages_by_date[date] = []
         messages_by_date[date].append(message)
 
-    messages = messages_by_date
+    messages = dict(sorted(messages_by_date.items()))
     
     context = {
         'name': name,
