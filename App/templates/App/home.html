@@ -186,6 +186,16 @@
       }
     })
 
+    let logout_button = document.getElementById('logout-button')
+    logout_button.addEventListener('click', () => {
+      chatSocket.send(JSON.stringify({
+        'type':'create_toast',
+        'name':name,
+        'connection_type':'disconnect'
+      }))  
+      chatSocket.close()
+    })
+
     //when form is submitted, add message info to consumers
     let form = document.getElementById('form')
     form.addEventListener('submit', (e)=> {
