@@ -28,7 +28,7 @@
             <a class="nav-link h5" href="{% url 'login' %}">Login</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link h5" href="{% url 'logout' %}">Logout</a>
+            <a id="logout-button" class="nav-link h5" href="{% url 'logout' %}">Logout</a>
           </li>
         </ul>
         {% if request.session|get:"name" != None %}
